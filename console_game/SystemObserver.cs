@@ -1,10 +1,9 @@
 ﻿using System;
-using System.Security.Cryptography.X509Certificates;
-
+using TerminalUIBackend;
 
 namespace TerminalUIObserver
 {
-    internal class SystemObserver: IObserver<Dictionary<int,int>>
+    internal class SystemObserver: IObserver<Computer>
     {
 
         private int _cpuUsage;
@@ -21,7 +20,7 @@ namespace TerminalUIObserver
         public void OnError(Exception error) { }
 
 
-        public void OnNext(Dictionary<int, int> value) { }
+        public void OnNext(Computer computer) { }
 
 
     }

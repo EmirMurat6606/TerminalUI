@@ -70,8 +70,8 @@ namespace TerminalUIFrontend
             panel.BorderColor(Spectre.Console.Color.Aquamarine3) ;
             panel.Padding(new Padding(10)) ;
 
-            // Start a new thread that fetches system information periodically
-            var newTask = Task.Run(() => ComputerInfo.CpuUsage());
+            //// Start a new thread that fetches system information periodically
+            //var newTask = Task.Run(() => ComputerInfo.CpuUsage());
 
             await AnsiConsole.Live(panel).StartAsync(async ctx =>
             {
