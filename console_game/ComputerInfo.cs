@@ -1,37 +1,47 @@
-﻿using Microsoft.VisualBasic;
-using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
+﻿using System;
 using System.Management;
 using TerminalUIObserver;
 
 namespace TerminalUIBackend
 {
-
+    /// <summary>
+    /// Class that contains system information such as cpu usage, battery percentage, gpu usage, etc.
+    /// </summary>
     class Computer
     {
 
-        private List<SystemObserver> _observers;
+        private List<SystemObserver> _observers = new();
 
         private int _cpuUsage;
         private int _batteryPercentage;
 
-        public int CPU_USAGE { get; }
-        public int BATTERY_USAGE { get; }
+        private bool scanning = true;
+
+        public int CPU_USAGE { get { return _cpuUsage; } }
+        public int BATTERY_PERCENTAGE { get { return _batteryPercentage; } }
+
+        public bool SCANNING { get; set; }
 
         /// <summary>
-        /// Function that updates all members of the Computer instance 
+        /// Function that updates all the members of the computer instance periodically 
         /// </summary>
-        public void Update()
+        /// <param name="timeInterval">The time interval in seconds</param>
+        public void Update(int timeInterval)
         {
-            _cpuUsage = ComputerInfo.CpuUsage();
-            _batteryPercentage = 100;
+            while (scanning)
+            { 
+                _cpuUsage = ComputerInfo.CpuUsage();
+                _batteryPercentage = 100;
 
-            // Pass the Computer instance to the observers
-            foreach (var observer in _observers)
-                observer.OnNext(this);
+                // Pass the Computer instance to the observers
+                foreach (var observer in _observers)
+                    observer.OnNext(this);
+
+                Thread.Sleep(timeInterval * 1000);
+                Console.WriteLine("updated");
+
+            }
+
         }
 
         /// <summary>
@@ -43,6 +53,13 @@ namespace TerminalUIBackend
             _observers.Add(observer);
         }
 
+        /// <summary>
+        /// Provides methods for retrieving information about the computer's hardware and performance metrics.
+        /// </summary>
+        /// <remarks>The <see cref="ComputerInfo"/> class includes static methods to query system
+        /// information such as CPU usage. It uses Windows Management Instrumentation (WMI) to gather data, which may
+        /// require appropriate permissions and may not be supported on all platforms. This class is intended for use in
+        /// environments where WMI is available.</remarks>
         class ComputerInfo
         {
 

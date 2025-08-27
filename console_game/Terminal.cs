@@ -9,7 +9,10 @@ namespace TerminalUIFrontend
    
     internal class Terminal
     {
-
+        /// <summary>
+        /// Constructor of the Terminal class
+        /// </summary>
+        /// <param name="systemObserver">The systemObserver object that observes system information</param>
         public Terminal(SystemObserver systemObserver)
         {
             this.systemObserver = systemObserver;
@@ -41,8 +44,12 @@ namespace TerminalUIFrontend
             }
         }
 
-        static private void DrawArrows(Canvas canvas)
+        private void DrawArrows(Canvas canvas)
         {
+
+            
+           
+            
 
         }
 
@@ -63,7 +70,7 @@ namespace TerminalUIFrontend
             }
 
             // Create a panel
-            var panel = new Panel(new Columns(gpuCanvas, cpuCanvas)) ;
+            var panel = new Panel(new Rows( new Columns(new Markup("[bold blue] CPU [/]"), new Markup("[bold purple] GPU [/]")), new Columns(gpuCanvas, cpuCanvas)));
             panel.Width = 90 ;
             panel.Height = 40;
             panel.Header = new PanelHeader("[bold Aquamarine3] -- Dashboard -- [/]").Centered() ;
@@ -72,9 +79,10 @@ namespace TerminalUIFrontend
 
             //// Start a new thread that fetches system information periodically
             //var newTask = Task.Run(() => ComputerInfo.CpuUsage());
-
             await AnsiConsole.Live(panel).StartAsync(async ctx =>
             {
+
+                int percentage = systemObserver.CPU_USAGE;
                 ctx.UpdateTarget(panel);
 
             });   

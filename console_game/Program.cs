@@ -5,12 +5,13 @@
 using TerminalUIFrontend;
 using TerminalUIBackend;
 using TerminalUIObserver;
+using System.Threading.Tasks;
 
 namespace DashboardUI
 {
     class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
             SystemObserver systemObserver = new SystemObserver();
             Computer computerInstance = new Computer();
@@ -18,10 +19,15 @@ namespace DashboardUI
             // Attach an observer to the computer instance
             computerInstance.Attach(systemObserver);
 
+            // Start a new thread for the Computer instance
+            Task scanComputer = Task.Run(() => computerInstance.Update(5));
+
             // Run the terminal 
             Terminal myTerminal = new Terminal(systemObserver);
-            myTerminal.Run();
+            await myTerminal.Run();
 
+            computerInstance.SCANNING = false;
+            await scanComputer;
         }
     }
 }
