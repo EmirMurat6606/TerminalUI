@@ -1,8 +1,4 @@
 ﻿using Spectre.Console;
-using System;
-using System.Diagnostics;
-using System.Drawing;
-using System.Security.Cryptography;
 using TerminalUIBackend;
 using TerminalUIObserver;
 
@@ -50,17 +46,17 @@ namespace TerminalUIFrontend
             }
         }
 
-        
+
         private static double AngleFromCenter(int x, int y, int cx, int cy)
         {
             double dx = x - cx;
-            double dy = cy - y; 
+            double dy = cy - y;
             double angle = Math.Atan2(dy, dx) * 180.0 / Math.PI;
             if (angle < 0) angle += 360;
             return angle;
         }
 
-        
+
         private static void FillSector(Canvas canvas, int percentage, int radius, int cx, int cy, Spectre.Console.Color color)
         {
             if (percentage <= 0) return;
@@ -94,6 +90,7 @@ namespace TerminalUIFrontend
             }
         }
 
+
         private static void DrawNeedle(Canvas canvas, int percentage, int radius, int cx, int cy, Spectre.Console.Color color)
         {
             if (percentage < 0) percentage = 0;
@@ -103,7 +100,7 @@ namespace TerminalUIFrontend
             int endX = cx + (int)(radius * Math.Cos(angle));
             int endY = cy - (int)(radius * Math.Sin(angle));
 
-            
+
             int dx = Math.Abs(endX - cx), sx = cx < endX ? 1 : -1;
             int dy = -Math.Abs(endY - cy), sy = cy < endY ? 1 : -1;
             int err = dx + dy, e2;
@@ -134,24 +131,41 @@ namespace TerminalUIFrontend
             var cpuCanvas = new Canvas(16, 16);
             var gpuCanvas = new Canvas(16, 16);
 
-            var batteryBar = new BarChart().Width(50).AddItem("Fuel", 40, Spectre.Console.Color.Aqua);
+            var batteryBar = new BarChart().Width(0).AddItem("Battery", 0, Spectre.Console.Color.Red);
+
+            var cpuTempMarkup = new Markup($"[bold yellow]CPU Temp: {systemObserver.CPU_TEMP}°C[/]");
+            var gpuTempMarkup = new Markup($"[bold orange1]GPU Temp: {systemObserver.GPU_TEMP}°C[/]");
 
 
             // Create a panel
-            var panel = new Panel(
-                new Rows(
-                    new Columns(new Markup("[bold blue] CPU [/]"), new Markup("[bold purple] GPU [/]")),
-                    new Columns(cpuCanvas, gpuCanvas),
-                    new Columns(),
-                    new Columns(new Markup(Emoji.Known.FuelPump), batteryBar)
-                    )
-                );
+            var panel = new Panel
+            (
+                new Rows
+                (
+                    new Columns
+                    (
+                        new Panel(new Markup("[bold blue] CPU [/]")) { Padding = new Padding(0), Border = BoxBorder.None },
+                        new Panel(new Markup("[bold purple] GPU [/]")) { Padding = new Padding(0), Border = BoxBorder.None }
 
-            panel.Width = 90;
-            panel.Height = 40;
+                    ),
+                    new Columns(
+                        cpuCanvas,
+                        gpuCanvas,
+                        new Panel(new Rows(cpuTempMarkup, gpuTempMarkup))
+                        {
+                            Padding = new Padding(0),
+                            Border = BoxBorder.None
+                        }),
+                    new Markup(" "),
+                    new Columns(new Markup(Emoji.Known.FuelPump), batteryBar)
+                )
+            );
+
+            panel.Width = 40;
+            panel.Height = 25;
             panel.Header = new PanelHeader("[bold Aquamarine3] -- Dashboard -- [/]").Centered();
             panel.BorderColor(Spectre.Console.Color.Aquamarine3);
-            panel.Padding(new Padding(10));
+            panel.Padding(new Padding(3));
 
             await AnsiConsole.Live(panel).StartAsync(async ctx =>
             {
@@ -163,11 +177,11 @@ namespace TerminalUIFrontend
                     // Clear the canvases
                     ClearCanvas(gpuCanvas);
                     ClearCanvas(cpuCanvas);
-                    
+
 
                     int cpuPercentage = systemObserver.CPU_USAGE;
-                    int gpuPercentage = 50; //Hardcoded
-                    int batteryPercentage = 20; //Hardcoded
+                    int gpuPercentage = systemObserver.GPU_USAGE;
+                    int batteryPercentage = systemObserver.BATTERY_PERCENTAGE;
 
                     int cpuR = Math.Min(cpuCanvas.Width, cpuCanvas.Height) / 2 - 1;
                     int cpuCx = cpuCanvas.Width / 2;
@@ -188,11 +202,14 @@ namespace TerminalUIFrontend
                     DrawNeedle(cpuCanvas, cpuPercentage, cpuR, cpuCx, cpuCy, Spectre.Console.Color.Red);
                     DrawNeedle(gpuCanvas, gpuPercentage, gpuR, gpuCx, gpuCy, Spectre.Console.Color.Red);
 
-                    // Update battery info (not via systemObserver)
+                    // Update battery info
+                    batteryBar.Data.Clear();
+                    batteryBar.Width(batteryPercentage / 2).AddItem("Battery", batteryPercentage, Spectre.Console.Color.Red);
 
-                    batteryBar.AddItem("Fuel", RandomNumberGenerator.GetInt32(50), Spectre.Console.Color.Aqua);
-                        
-                    
+                    cpuTempMarkup = new Markup("$[bold yellow]CPU Temp: {systemObserver.CPU_TEMP}°C[/]");
+                    gpuTempMarkup = new Markup($"[bold orange1]GPU Temp: {systemObserver.GPU_TEMP}°C[/]");
+
+
 
                     ctx.UpdateTarget(panel);
 

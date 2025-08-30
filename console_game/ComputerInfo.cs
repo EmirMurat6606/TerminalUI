@@ -1,6 +1,8 @@
-﻿using System;
+﻿using System.Diagnostics;
 using System.Management;
 using TerminalUIObserver;
+using LibreHardwareMonitor.Hardware;
+
 
 namespace TerminalUIBackend
 {
@@ -14,10 +16,17 @@ namespace TerminalUIBackend
 
         private int _cpuUsage;
         private int _batteryPercentage;
+        private int _gpuUsage;
+        private int _cpuTemp;
+        private int _gpuTemp;
 
         private bool scanning = true;
 
         public int CPU_USAGE { get { return _cpuUsage; } }
+        public int GPU_USAGE { get { return _gpuUsage; } }
+        public int CPU_TEMP { get { return _cpuTemp; } }
+
+        public int GPU_TEMP { get { return _gpuTemp; } }
         public int BATTERY_PERCENTAGE { get { return _batteryPercentage; } }
 
         public bool SCANNING { get; set; }
@@ -33,7 +42,10 @@ namespace TerminalUIBackend
             while (scanning)
             {
                 _cpuUsage = ComputerInfo.CpuUsage();
-                _batteryPercentage = 100;
+                _batteryPercentage = ComputerInfo.BatteryPercentage();
+                _gpuUsage = ComputerInfo.GpuUsage();
+                _cpuTemp = ComputerInfo.CpuTemperature();
+                _gpuTemp= ComputerInfo.GpuTemperature();
 
                 // Pass the Computer instance to the observers
                 foreach (var observer in _observers)
@@ -64,35 +76,132 @@ namespace TerminalUIBackend
     /// environments where WMI is available.</remarks>
     class ComputerInfo
     {
-        private static string WMIQuery(string information, string component)
+
+        private static List<PerformanceCounter> _gpuCounters;
+
+        private static PerformanceCounter m_CPUCounter;
+
+        private static LibreHardwareMonitor.Hardware.Computer _computer;
+
+        static ComputerInfo()
         {
-            ObjectQuery query = new ObjectQuery($"SELECT {information} FROM {component}");
 
-            using (ManagementObjectSearcher searcher = new ManagementObjectSearcher(query))
-            using (ManagementObjectCollection collection = searcher.Get())
+            m_CPUCounter = new PerformanceCounter();
+            m_CPUCounter.CategoryName = "Processor";
+            m_CPUCounter.CounterName = "% Processor Time";
+            m_CPUCounter.InstanceName = "_Total";
 
-                foreach (ManagementObject obj in collection)
+            _computer = new LibreHardwareMonitor.Hardware.Computer
+            {
+                IsCpuEnabled = true,
+                IsGpuEnabled = true
+            };
+            _computer.Open();
+
+
+            // Initialize 3D engine counters
+            var category = new PerformanceCounterCategory("GPU Engine");
+            var instanceNames = category.GetInstanceNames();
+            _gpuCounters = new List<PerformanceCounter>();
+
+            foreach (var name in instanceNames)
+            {
+                if (name.Contains("engtype_3D"))
                 {
-                    return obj[information]?.ToString() ?? "No Battery Found";
+                    var counters = category.GetCounters(name);
+                    foreach (var c in counters)
+                    {
+                        if (c.CounterName == "Utilization Percentage")
+                            _gpuCounters.Add(c);
+                    }
                 }
-            return "No Battery Found";
+            }
+
+            foreach (var counter in _gpuCounters)
+                counter.NextValue();
         }
 
+        /// <summary>
+        /// Function to get the current estimated battery load (in percentage)
+        /// </summary>
+        /// <returns>Integer between 0-100</returns>
+        static public int BatteryPercentage()
+        {
+            using (ManagementObjectSearcher searcher = new(new ObjectQuery("SELECT EstimatedChargeRemaining FROM Win32_Battery")))
+
+                foreach (ManagementObject obj in searcher.Get())
+                {
+                    return Convert.ToInt32(obj["EstimatedChargeRemaining"]);
+                }
+
+            return 0;
+        }
 
         /// <summary>
         /// Function to get the current CPU usage (in percentage)
         /// </summary>
-        /// <returns>An integer between 0-100 (representing a percentage)</returns>
+        /// <returns>Integer between 0-100 </returns>
         static public int CpuUsage()
         {
-            var query = new ObjectQuery("SELECT Name, percentprocessortime FROM Win32_PerfFormattedData_Counters_ProcessorInformation");
-            using (ManagementObjectSearcher searcher = new ManagementObjectSearcher(query))
-            using (ManagementObjectCollection collection = searcher.Get())
+            return Convert.ToInt32(m_CPUCounter.NextValue());
+        }
 
-                foreach (ManagementObject obj in collection)
-                    if (obj["Name"].ToString() == "0,_Total")
-                        return Convert.ToInt32(obj["PercentProcessorTime"]);
-            return -1;
+        /// <summary>
+        /// Function to get the current GPU usage (in percentage)
+        /// </summary>
+        /// <returns>Integer between 0-100</returns>
+        static public int GpuUsage()
+        {
+
+            float total = 0;
+            foreach (var counter in _gpuCounters)
+                total += counter.NextValue();
+
+            return Convert.ToInt32(total);
+
+        }
+
+        /// <summary>
+        /// Function to get CPU temperature (in degrees Celsius)
+        /// </summary>
+        /// <returns>Temperature as an integer</returns>
+        static public int CpuTemperature()
+        {
+            foreach (var hardware in _computer.Hardware)
+            {
+                if (hardware.HardwareType == HardwareType.Cpu)
+                {
+                    hardware.Update();
+                    foreach (var sensor in hardware.Sensors)
+                    {
+                        if (sensor.SensorType == SensorType.Temperature)
+                            Trace.WriteLine(sensor.Value);
+                            return Convert.ToInt32(sensor.Value ?? 0);
+                    }
+                }
+            }
+            return 0;
+        }
+
+        /// <summary>
+        /// Function to get GPU temperature (in degrees Celsius)
+        /// </summary>
+        /// <returns>Temperature as an integer</returns>
+        static public int GpuTemperature()
+        {
+            foreach (var hardware in _computer.Hardware)
+            {
+                if (hardware.HardwareType == HardwareType.GpuNvidia || hardware.HardwareType == HardwareType.GpuAmd)
+                {
+                    hardware.Update();
+                    foreach (var sensor in hardware.Sensors)
+                    {
+                        if (sensor.SensorType == SensorType.Temperature)
+                            return Convert.ToInt32(sensor.Value ?? 0);
+                    }
+                }
+            }
+            return 0;
         }
     }
 }
