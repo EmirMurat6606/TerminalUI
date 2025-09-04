@@ -17,8 +17,6 @@ A *fancy terminal application* written in C# that displays real-time **CPU/GPU u
 
 ## 📸 Screenshot
 
-*(add a screenshot of your terminal UI here)*
-
 ![screenshot](./Screenshots/TerminalUIDemo.png)
 
 ---
