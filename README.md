@@ -1,84 +1,47 @@
-\# 🖥️ TerminalUI Dashboard
+# 🖥️ TerminalUI Dashboard
 
-
-
-A \*\*fancy terminal application\*\* written in C# that displays real-time \*\*CPU/GPU usage, temperatures, and battery status\*\* using \[Spectre.Console](https://spectreconsole.net/) and \[LibreHardwareMonitor](https://github.com/LibreHardwareMonitor/LibreHardwareMonitor).
-
-
+A *fancy terminal application* written in C# that displays real-time **CPU/GPU usage, temperatures, and battery status** using [Spectre.Console](https://spectreconsole.net/) and [LibreHardwareMonitor](https://github.com/LibreHardwareMonitor/LibreHardwareMonitor).
 
 ---
 
+## 🚀 Features
 
-
-\## 🚀 Features
-
-\- ✅ CPU usage (%)
-
-\- ✅ GPU usage (%)
-
-\- ✅ CPU temperature (°C)
-
-\- ✅ GPU temperature (°C)
-
-\- ✅ Battery percentage
-
-\- ✅ Live terminal UI with gauges and meters
-
-
+- ✅ CPU usage (%)
+- ✅ GPU usage (%)
+- ✅ CPU temperature (°C)
+- ✅ GPU temperature (°C)
+- ✅ Battery percentage
+- ✅ Live terminal UI with gauges and meters
 
 ---
 
+## 📸 Screenshot
 
+*(add a screenshot of your terminal UI here)*
 
-\## 📸 Screenshot
-
-
-
-\*(add a screenshot of your terminal UI here)\*
-
-
-
-!\[screenshot](./ScreenShots/TerminalUIDemo.png)
-
-
+![screenshot](./Screenshots/TerminalUIDemo.png)
 
 ---
 
+## 🛠️ Installation
+1. Clone this project:
 
-
-\## 🛠️ Installation
-
-
-
-1\. Clone this project:
-
-&nbsp;  ```bash
-
-&nbsp;  git clone https://github.com/EmirMurat6606/TerminalUI
-
-&nbsp;  cd terminalui
-
-2\. Install the required dotnet packages:
-
-&nbsp;  ```bash
-
-&nbsp;	dotnet add package Spectre.Console
-
-&nbsp;	dotnet add package LibreHardwareMonitorLib
-
-3\. Build and run
-
-&nbsp;	```bash
-
-&nbsp;	dotnet run
-
+```bash
+git clone https://github.com/EmirMurat6606/TerminalUI
+cd TerminalUI
+```
+2. Install the required dotnet packages:
+```bash
+dotnet add package Spectre.Console
+dotnet add package LibreHardwareMonitorLib
+```
+3. Build and run
+```bash
+dotnet run
+```
 ---
 
-
-
-\## Remarks
-
-
+## Remarks
 
 When running the application, you have to wait a couple of seconds
 
