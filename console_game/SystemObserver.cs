@@ -22,9 +22,9 @@ namespace TerminalUIObserver
         public int GPU_TEMP { get { return _gpuTemp; } }
 
 
-        public void OnCompleted() { /*Not implemented*/}
+        public void OnCompleted() { throw new NotImplementedException();  }
 
-        public void OnError(Exception error) { /*Not implemented*/ }
+        public void OnError(Exception error) { throw new NotImplementedException();  }
 
         public void OnNext(Computer computer)
         {

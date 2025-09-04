@@ -37,7 +37,6 @@ namespace TerminalUIBackend
         /// <param name="timeInterval">The time interval in seconds</param>
         public void Update(float timeInterval)
         {
-            File.WriteAllText("log.txt", "updated");
 
             while (scanning)
             {
@@ -45,7 +44,7 @@ namespace TerminalUIBackend
                 _batteryPercentage = ComputerInfo.BatteryPercentage();
                 _gpuUsage = ComputerInfo.GpuUsage();
                 _cpuTemp = ComputerInfo.CpuTemperature();
-                _gpuTemp= ComputerInfo.GpuTemperature();
+                _gpuTemp = ComputerInfo.GpuTemperature();
 
                 // Pass the Computer instance to the observers
                 foreach (var observer in _observers)
@@ -176,7 +175,7 @@ namespace TerminalUIBackend
                     {
                         if (sensor.SensorType == SensorType.Temperature)
                             Trace.WriteLine(sensor.Value);
-                            return Convert.ToInt32(sensor.Value ?? 0);
+                        return Convert.ToInt32(sensor.Value ?? 0);
                     }
                 }
             }
